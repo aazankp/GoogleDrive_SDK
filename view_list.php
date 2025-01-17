@@ -15,8 +15,8 @@ $sTableView = "<center><table class='mt-5 table table-dark table-striped' border
             $sDelete = "<a class='btn btn-danger' href='#'>Delete</a>";
         } else {
             $sName = '<a href="ViewFile.php?Fileid='.$file->id.'" target="_blank" style="color: white; text-decoration: none;">'.$file->name.'</a>';
-            $sDownload = "<a class='btn btn-success' href='#'>Download</a>";
-            $sDelete = "<a class='btn btn-danger' href='#'>Delete</a>";
+            $sDownload = '<a class="btn btn-success" href="ViewFile.php?download='.$file->id.'&fileName='.$file->name.'" target="_blank" onclick="openDownload(this.href, '.$file->name.'); return false;">Download</a>';
+            $sDelete = '<a class="btn btn-danger" href="ViewFile.php?delete='.$file->id.'">Delete</a>';
         }
 
         $sTableView .= "<tr align='center'>
@@ -110,5 +110,21 @@ $sTableView .= "</table></center>";
 
     <?= $sTableView ?>
 
+    <script>
+        function openDownload(fileUrl, fileName) {
+            const newTab = window.open();
+            const script = `
+                const link = document.createElement('a');
+                link.href = '${fileUrl}';
+                link.download = '${fileName}';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                setTimeout(() => window.close(), 1000);
+            `;
+            newTab.document.write(`<html><body><script>${script}<\/script></body></html>`);
+            newTab.document.close();
+        }
+    </script>
 </body>
 </html>

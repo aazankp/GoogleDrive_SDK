@@ -122,8 +122,10 @@ class DriveFun {
             $fileId = $_GET['Fileid'];
 
             $file = $this->driveService->files->get($fileId, [
-                'fields' => 'id, name, mimeType, webContentLink, webViewLink'
+                'fields' => 'id, name, mimeType'
             ]);
+
+            
 
             return $file;
 
@@ -131,6 +133,21 @@ class DriveFun {
             echo "Error Message: " . $e->getMessage();
             return null;
         }
+    }
+
+    function downloadFile($fileId)
+    {
+        try {
+
+            $response = $this->driveService->files->get($fileId, array(
+                'alt' => 'media'));
+            $content = $response->getBody()->getContents();
+            return $content;
+
+        } catch(Exception $e) {
+            echo "Error Message: ".$e;
+        }
+
     }
 
 
