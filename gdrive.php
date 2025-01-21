@@ -20,26 +20,51 @@ if (isset($_GET['code'])) {
     } else {
         $client->setAccessToken($access_token['access_token']);
         setcookie('Google-Drive', base64_encode(json_encode($access_token)), time() + (86400 * 30), '/');
-        header('location: access_token.php');
+        header('location: gdrive.php');
     }
 
 } else {
     require_once 'clsDriveFun.php';
 
+    ob_start();
+
     $objDriveFun = new DriveFun;
     $files = $objDriveFun->searchFiles();
 
     require_once 'view_list.php';
+
+    $sFolderid = "root";
+    if(isset($_GET["Folderid"]) && $_GET["Folderid"] != "") $sFolderid = $_GET["Folderid"];
     
     if (isset($_POST['upload']))
     {
         $uploadFile = $_FILES['uploadFile'];
-        $uploadFile = $objDriveFun->upload($uploadFile);
+        $uploadFile = $objDriveFun->upload($uploadFile, $sFolderid);
 
-        header('location: access_token.php');
+        if(isset($_GET["Folderid"]) && $_GET["Folderid"] != "")
+        {
+            header("location: gdrive.php?Folderid=$sFolderid");
+        }
+        else {
+            header('location: gdrive.php');
+        }
     }
 
-    
+    if (isset($_POST['create']))
+    {
+        $folderName = $_POST['folderName'];
+        $createFolder = $objDriveFun->createFolder($folderName, $sFolderid);
+
+        if(isset($_GET["Folderid"]) && $_GET["Folderid"] != "")
+        {
+            header("location: gdrive.php?Folderid=$sFolderid");
+        }
+        else {
+            header('location: gdrive.php');
+        }
+    }
+
+    ob_end_flush();
 }
 
 ?>

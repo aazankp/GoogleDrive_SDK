@@ -1,10 +1,10 @@
 <?php
-if (isset($_GET["Fileid"])) {
+if (isset($_GET["Fileid"]) && $_GET["Fileid"] != "") {
     require_once 'vendor/autoload.php';
     require_once 'clsDriveFun.php';
 
     $objDriveFun = new DriveFun();
-    $singleFile = $objDriveFun->searchSingleFile();
+    $singleFile = $objDriveFun->searchSingleFile($_GET["Fileid"]);
     
     $mimeType = $singleFile->mimeType;
     $fileName = $singleFile->name;
@@ -43,7 +43,7 @@ if (isset($_GET["Fileid"])) {
     }
     
 }
-elseif ($_GET["download"])
+elseif (isset($_GET["download"]) && $_GET["download"] != "")
 {
     require_once 'vendor/autoload.php';
     require_once 'clsDriveFun.php';
@@ -52,6 +52,24 @@ elseif ($_GET["download"])
 
     $getFileContent = $objDriveFun->downloadFile($_GET["download"]);
 
-    file_put_contents("img_and_docs/".$_GET["fileName"], $getFileContent);
+    if(file_put_contents("img_and_docs/".$_GET["fileName"], $getFileContent)) $response = 1;
+    else $response = 0;
+
+    echo $response;
 }
+elseif (isset($_GET["delete"]) && $_GET["delete"] != "")
+{
+    require_once 'vendor/autoload.php';
+    require_once 'clsDriveFun.php';
+
+    $objDriveFun = new DriveFun();
+
+    $res = $objDriveFun->deleteFile($_GET["delete"]);
+
+    if($res) $response = 2;
+    else $response = 0;
+
+    echo $response;
+}
+
 ?>

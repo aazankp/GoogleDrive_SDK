@@ -11,7 +11,7 @@ $client->setAuthConfig('client_secret.json');
 
 $client->addScope(Google\Service\Drive::DRIVE);
 
-$redirect_uri = 'http://' . $_SERVER['HTTP_HOST'] . '/GoogleDrive/access_token.php';
+$redirect_uri = 'http://' . $_SERVER['HTTP_HOST'] . '/GoogleDrive/gdrive.php';
 $client->setRedirectUri($redirect_uri);
 $client->setAccessType('offline');
 
@@ -19,7 +19,7 @@ if (!isset($_GET['code']) && !isset($_COOKIE['Google-Drive'])) {
     $auth_url = $client->createAuthUrl();
     header('Location: ' . filter_var($auth_url, FILTER_SANITIZE_URL));
 } else {
-    header('location: access_token.php');
+    header('location: gdrive.php');
 }
 
 ?>

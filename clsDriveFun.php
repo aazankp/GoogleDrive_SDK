@@ -84,19 +84,18 @@ class DriveFun {
         }
     }
 
-    public function upload($file)
+    public function upload($file, $folderId)
     {
         try {
-            
-            $fileName = $file['name'];
-            $fileName = preg_replace("/[^a-zA-Z0-9\._-]/", "_", $fileName);
+
+            $fileName = preg_replace("/[^a-zA-Z0-9\._-]/", "_", $file['name']);
             $randomPrefix = rand(10000, 99999);
-            // $ext = pathinfo($fileName);
 
             $fileName = $randomPrefix . "_" . $fileName;
 
             $fileMetadata = new Drive\DriveFile(array(
-            'name' => $fileName));
+            'name' => $fileName,
+            'parents' => array($folderId)));
             $content = file_get_contents($file['tmp_name']);
             $file = $this->driveService->files->create($fileMetadata, array(
                 'data' => $content,
@@ -111,7 +110,7 @@ class DriveFun {
         }
     }
 
-    public function searchSingleFile()
+    public function searchSingleFile($fileId)
     {
         try
         {
@@ -119,13 +118,9 @@ class DriveFun {
                 throw new Exception('File ID is required!');
             }
 
-            $fileId = $_GET['Fileid'];
-
             $file = $this->driveService->files->get($fileId, [
                 'fields' => 'id, name, mimeType'
             ]);
-
-            
 
             return $file;
 
@@ -148,6 +143,44 @@ class DriveFun {
             echo "Error Message: ".$e;
         }
 
+    }
+
+
+    function deleteFile($fileId)
+    {
+        try {
+
+            $file = $this->searchSingleFile($fileId);
+            $response = $this->driveService->files->delete($fileId);
+
+            $file = 'img_and_docs/'.$file->name;
+            if(file_exists($file)) unlink($file); 
+
+            return $response;
+        } catch (Exception $e) {
+            echo "An error occurred: " . $e->getMessage() . "\n";
+        }
+    }
+    
+    function createFolder($sFolderName, $folderId)
+    {
+        try {
+
+            $fileMetadata = new Drive\DriveFile(array(
+                'name' => $sFolderName,
+                'mimeType' => 'application/vnd.google-apps.folder',
+                'parents' => array($folderId)
+            ));
+
+            $file = $this->driveService->files->create($fileMetadata, array(
+                'fields' => 'id')
+            );
+
+            return $file->id;
+
+        }catch(Exception $e) {
+            echo "Error Message: ".$e;
+        }
     }
 
 

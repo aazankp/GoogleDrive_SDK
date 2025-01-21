@@ -1,6 +1,6 @@
 <?php
 
-$sTableView = "<center><table class='mt-5 table table-dark table-striped' border='1' cellspacing='0' style='width: 80%;'>
+$sTableView = "<center><div id='TableContainer'><table class='mt-5 table table-dark table-striped' border='1' cellspacing='0' style='width: 80%;'>
     <tr align='center'>
         <th>S.No</th>
         <th>Files</th>
@@ -10,13 +10,13 @@ $sTableView = "<center><table class='mt-5 table table-dark table-striped' border
     $Sno = 1;
     foreach ($files as $file) {
         if ($file->mimeType === 'application/vnd.google-apps.folder') {
-            $sName = '<a href="access_token.php?Folderid='.$file->id.'" class="btn btn-primary">'.$file->name.'</a>';
+            $sName = '<a href="gdrive.php?Folderid='.$file->id.'" class="btn btn-primary">'.$file->name.'</a>';
             $sDownload = "";
             $sDelete = "<a class='btn btn-danger' href='#'>Delete</a>";
         } else {
             $sName = '<a href="ViewFile.php?Fileid='.$file->id.'" target="_blank" style="color: white; text-decoration: none;">'.$file->name.'</a>';
-            $sDownload = '<a class="btn btn-success" href="ViewFile.php?download='.$file->id.'&fileName='.$file->name.'" target="_blank" onclick="openDownload(this.href, '.$file->name.'); return false;">Download</a>';
-            $sDelete = '<a class="btn btn-danger" href="ViewFile.php?delete='.$file->id.'">Delete</a>';
+            $sDownload = '<a class="btn btn-success action" href="ViewFile.php?download='.$file->id.'&fileName='.$file->name.'" >Download</a>';
+            $sDelete = '<a class="btn btn-danger action" href="ViewFile.php?delete='.$file->id.'">Delete</a>';
         }
 
         $sTableView .= "<tr align='center'>
@@ -30,7 +30,7 @@ $sTableView = "<center><table class='mt-5 table table-dark table-striped' border
         $Sno++;
     }
 
-$sTableView .= "</table></center>";
+$sTableView .= "</table></div></center>";
 
 ?>
 
@@ -39,7 +39,7 @@ $sTableView .= "</table></center>";
 <head>
     <title>Document</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.15.10/sweetalert2.min.css" rel="stylesheet">
 </head>
 <body>
     <form method="POST" enctype="multipart/form-data">
@@ -110,21 +110,79 @@ $sTableView .= "</table></center>";
 
     <?= $sTableView ?>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.15.10/sweetalert2.min.js"></script>
+
     <script>
-        function openDownload(fileUrl, fileName) {
-            const newTab = window.open();
-            const script = `
-                const link = document.createElement('a');
-                link.href = '${fileUrl}';
-                link.download = '${fileName}';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                setTimeout(() => window.close(), 1000);
-            `;
-            newTab.document.write(`<html><body><script>${script}<\/script></body></html>`);
-            newTab.document.close();
-        }
+        $(document).ready(function () {
+            $(document).on('click', '.action', function (e) {
+                e.preventDefault();
+                actionUrl = $(this).attr('href');
+
+                Swal.fire({
+                    title: 'Processing...',
+                    text: 'Please wait while the file is being processed.',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                $.ajax({
+                    url: actionUrl,
+                    type: 'POST',
+                    success: async function (response) {
+                        console.log(response)
+                        Swal.close();
+
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: "top-end",
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true,
+                            background: '#fff',
+                            color: '#000',
+                            didOpen: (toast) => {
+                                toast.onmouseenter = Swal.stopTimer;
+                                toast.onmouseleave = Swal.resumeTimer;
+                            }
+                        });
+
+                        if (response == 1) {
+                            Toast.fire({
+                                icon: "success",
+                                title: "Success",
+                                text: "File Downloaded Successfully..."
+                            });
+                        }
+                        else if (response == 2) {
+                            Toast.fire({
+                                icon: "success",
+                                title: "Success",
+                                text: "File Deleted Successfully..."
+                            });
+                        } else {
+                            Toast.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: "Oops! Something went wrong..."
+                            });
+                        }
+
+                        $('#TableContainer').load(" #TableContainer>*");
+                    },
+                    error: function (xhr, status, error) {
+                        Swal.close();
+                        console.error('Error:', error);
+                        alert('An error occurred while submitting the form.');
+                        console.log('Response:', xhr.responseText);
+                    }
+                });
+            });
+        });
     </script>
 </body>
 </html>
